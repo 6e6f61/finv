@@ -6,12 +6,12 @@ const engine = @import("imgui/engine.zig");
 
 const crypto = @import("crypto.zig");
 const settings = @import("settings.zig");
+const positions = @import("positions.zig");
+const ig_util = @import("ig_util.zig");
 
 const Allocator = std.mem.Allocator;
 
 const heap_allocator = std.heap.c_allocator;
-
-var clearColor = ig.Vec4{ .x = 0.2, .y = 0.2, .z = 0.2, .w = 1 };
 
 pub fn main() !void {
     try engine.init("FinV", heap_allocator);
@@ -20,10 +20,13 @@ pub fn main() !void {
     var show_stocks_view = false;
     var show_crypto_view = false;
 
+    var show_positions = false;
+
     var show_settings = false;
     var show_demo_window = false;
 
     var instance_settings = settings.Settings.init();
+    var instance_positions = positions.Positions.init();
 
     // Main loop
     while (try engine.beginFrame()) : (engine.endFrame()) {
@@ -41,11 +44,7 @@ pub fn main() !void {
                     _ = ig.MenuItem_BoolPtr("Crypto", "Ctrl+Shift+C", &show_crypto_view);
                 }
 
-                if (ig.BeginMenu("Manage Data")) {
-                    defer ig.EndMenu();
-
-                    _ = ig.MenuItem_BoolPtr("")
-                }
+                _ = ig.MenuItem_BoolPtr("Positions", "Ctrl+P", &show_positions);
 
                 _ = ig.MenuItem_BoolPtr("Settings", "", &show_settings);
                 _ = ig.MenuItem_BoolPtr("Demo", "", &show_demo_window);
@@ -58,15 +57,30 @@ pub fn main() !void {
         //
         if (show_demo_window) ig.ShowDemoWindowExt(&show_demo_window);
 
-        //if (show_crypto_view) crypto.show_crypto_view();
-        if (show_settings) settings.show_settings_view(&instance_settings);
+        if (show_crypto_view) crypto.showCryptoView(&instance_positions.crypto);
+        if (show_positions) {
+            ig_util.finvSensibleSize();
+            ig_util.centerNextWindow();
+            try positions.showPositionsView(&instance_positions);
+        }
+
+        if (show_settings) {
+            ig_util.finvSensibleSize();
+            ig_util.centerNextWindow();
+            settings.showSettingsView(&instance_settings);
+        }
 
         //
         // Draw frame
         //
         var frame = try engine.render.beginRender();
         defer frame.end();
-        var colorRender = try frame.beginColorPass(clearColor);
+        var colorRender = try frame.beginColorPass(ig.Vec4 {
+            .x = instance_settings.background_colour[0],
+            .y = instance_settings.background_colour[1],
+            .z = instance_settings.background_colour[2],
+            .w = 1,
+        });
         defer colorRender.end();
 
         try engine.render.renderImgui(&colorRender);
