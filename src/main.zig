@@ -9,8 +9,6 @@ const settings = @import("settings.zig");
 const positions = @import("positions.zig");
 const ig_util = @import("ig_util.zig");
 
-const Allocator = std.mem.Allocator;
-
 const heap_allocator = std.heap.c_allocator;
 
 pub fn main() !void {
@@ -57,7 +55,7 @@ pub fn main() !void {
         //
         if (show_demo_window) ig.ShowDemoWindowExt(&show_demo_window);
 
-        if (show_crypto_view) crypto.showCryptoView(&instance_positions.crypto);
+        //if (show_crypto_view) crypto.showCryptoView(&instance_positions.addresses);
         if (show_positions) {
             ig_util.finvSensibleSize();
             ig_util.centerNextWindow();
@@ -75,6 +73,7 @@ pub fn main() !void {
         //
         var frame = try engine.render.beginRender();
         defer frame.end();
+
         var colorRender = try frame.beginColorPass(ig.Vec4 {
             .x = instance_settings.background_colour[0],
             .y = instance_settings.background_colour[1],
